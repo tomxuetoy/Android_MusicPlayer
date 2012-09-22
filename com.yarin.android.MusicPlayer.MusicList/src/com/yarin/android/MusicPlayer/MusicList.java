@@ -18,6 +18,7 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+// Tom Xue: to provide interactive Service/Client working mode
 public class MusicList extends ListActivity {
 	private MusicPlayerService mMusicPlayerService = null;
 	private MusicInfoController mMusicInfoController = null;
@@ -69,8 +70,6 @@ public class MusicList extends ListActivity {
 		Intent intent = new Intent(this, MusicPlayerService.class);
 		bindService(intent,
 				mPlaybackConnection, Context.BIND_AUTO_CREATE);
-        // Tom Xue: either bindService() or startService()
-        // can start the Service
 //		startService(intent);
 
 		mTextView = (TextView) findViewById(R.id.show_text);
