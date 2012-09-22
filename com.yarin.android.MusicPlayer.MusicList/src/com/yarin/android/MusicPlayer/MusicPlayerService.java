@@ -9,6 +9,7 @@ import android.os.Binder;
 import android.os.IBinder;
 
 public class MusicPlayerService extends Service {
+	// due to below onBind, so here must be IBinder
 	private final IBinder mBinder = new LocalBinder();
 
 	private MediaPlayer mMediaPlayer = null;
@@ -16,6 +17,8 @@ public class MusicPlayerService extends Service {
 	public static final String PLAYER_PREPARE_END = "com.yarin.musicplayerservice.prepared";
 	public static final String PLAY_COMPLETED = "com.yarin.musicplayerservice.playcompleted";
 
+	// Tom Xue: When server's action is ready,
+	// it will sendBroadcast the event via Intent
 	MediaPlayer.OnCompletionListener mCompleteListener = new MediaPlayer.OnCompletionListener() {
 		public void onCompletion(MediaPlayer mp) {
 			broadcastEvent(PLAY_COMPLETED);
@@ -41,6 +44,7 @@ public class MusicPlayerService extends Service {
 		mMediaPlayer.setOnCompletionListener(mCompleteListener);
 	}
 
+	// Tom Xue: the method returns an instance of this service
 	public class LocalBinder extends Binder {
 		public MusicPlayerService getService() {
 			return MusicPlayerService.this;
@@ -55,6 +59,8 @@ public class MusicPlayerService extends Service {
 
 		try {
 			mMediaPlayer.reset();
+			// path: the path of the file, or the http/rtsp URL of the stream
+			// you want to play
 			mMediaPlayer.setDataSource(path);
 			mMediaPlayer.prepare();
 		} catch (IOException e) {

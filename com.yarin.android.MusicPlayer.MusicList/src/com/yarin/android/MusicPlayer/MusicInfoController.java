@@ -12,6 +12,8 @@ public class MusicInfoController {
 
 	public static MusicInfoController getInstance(MusicPlayerApp app) {
 		if (mInstance == null) {
+			// Tom Xue: constructor has no return value,
+			// but it will make an instance
 			mInstance = new MusicInfoController(app);
 		}
 		return mInstance;
@@ -19,8 +21,10 @@ public class MusicInfoController {
 
 	private MusicInfoController(MusicPlayerApp app) {
 		pApp = app;
+		// return pApp; // added by Tom Xue
 	}
 
+	// Tom Xue: not used and can be removed
 	public MusicPlayerApp getMusicPlayer() {
 		return pApp;
 	}
@@ -35,6 +39,7 @@ public class MusicInfoController {
 	}
 
 	public Cursor getAllSongs() {
+		// this query is the above one: ContentResolver -> query -> getAllSongs
 		return query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null, null,
 				null, MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
 	}

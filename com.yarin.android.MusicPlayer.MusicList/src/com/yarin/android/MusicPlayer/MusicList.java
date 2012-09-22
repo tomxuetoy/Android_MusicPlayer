@@ -26,6 +26,8 @@ public class MusicList extends ListActivity {
 	private TextView mTextView = null;
 	private Button mPlayPauseButton = null;
 	private Button mStopButton = null;
+	// a little bit winding...
+	// bindService -> ServiceConnection -> IBinder
 	private ServiceConnection mPlaybackConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			mMusicPlayerService = ((MusicPlayerService.LocalBinder) service)
@@ -37,6 +39,8 @@ public class MusicList extends ListActivity {
 		}
 	};
 
+	// Tom Xue: Server will sendBroadcast (when some action is ready),
+	// and then client will react after receive the broadcast
 	protected BroadcastReceiver mPlayerEvtReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -61,15 +65,17 @@ public class MusicList extends ListActivity {
 		MusicPlayerApp musicPlayerApp = (MusicPlayerApp) getApplication();
 		mMusicInfoController = (musicPlayerApp).getMusicInfoController();
 
-		// bind playback service
-		startService(new Intent(this, MusicPlayerService.class));
-		bindService(new Intent(this, MusicPlayerService.class),
+		// bind/start playback service, refactor by Tom Xue
+		Intent intent = new Intent(this, MusicPlayerService.class);
+		bindService(intent,
 				mPlaybackConnection, Context.BIND_AUTO_CREATE);
+		startService(intent);
 
 		mTextView = (TextView) findViewById(R.id.show_text);
 		mPlayPauseButton = (Button) findViewById(R.id.play_pause_btn);
 		mStopButton = (Button) findViewById(R.id.stop_btn);
 
+		// toggle play/pause
 		mPlayPauseButton.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View v) {
 				// Perform action on click
@@ -99,13 +105,17 @@ public class MusicList extends ListActivity {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(MusicPlayerService.PLAYER_PREPARE_END);
 		filter.addAction(MusicPlayerService.PLAY_COMPLETED);
+		// Register a BroadcastReceiver to be run in the main activity thread.
 		registerReceiver(mPlayerEvtReceiver, filter);
 	}
 
 	protected void onResume() {
 		super.onResume();
+		// Tom Xue: a way to retrieve/refresh the songs, and notice to
+		// disconnect the SD card with PC
 		mCursor = mMusicInfoController.getAllSongs();
 
+		// Tom Xue: associate the song list and the view
 		ListAdapter adapter = new MusicListAdapter(this,
 				android.R.layout.simple_expandable_list_item_2, mCursor,
 				new String[] {}, new int[] {});
@@ -120,6 +130,14 @@ public class MusicList extends ListActivity {
 		}
 		mCursor.moveToPosition(position);
 		String url = mCursor.getString(mCursor
+		// path: the path of the file, or the http/rtsp URL of the stream
+		// you want to play
+		// So here should be the stream data specified
+		// below is my guess, for better understanding
+		// row1: col1 col2 col3
+		// row2: col1 col2 col3
+		// song 1: TITLE DISPLAY_NAME DATA ...
+		// song 2: TITLE DISPLAY_NAME DATA
 				.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
 		mMusicPlayerService.setDataSource(url);
 		mMusicPlayerService.start();
@@ -136,6 +154,7 @@ class MusicListAdapter extends SimpleCursorAdapter {
 		super(context, layout, c, from, to);
 	}
 
+	// to bind additional meta data to the view, by Tom Xue
 	public void bindView(View view, Context context, Cursor cursor) {
 
 		super.bindView(view, context, cursor);
@@ -144,18 +163,22 @@ class MusicListAdapter extends SimpleCursorAdapter {
 		TextView artistView = (TextView) view.findViewById(android.R.id.text2);
 
 		titleView.setText(cursor.getString(cursor
+		// music name/title
 				.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)));
 
 		artistView.setText(cursor.getString(cursor
+		// music author/artist
 				.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)));
 
 		// int duration =
 		// cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
 	}
 
+	// not used
 	public static String makeTimeString(long milliSecs) {
 		StringBuffer sb = new StringBuffer();
 		long m = milliSecs / (60 * 1000);
+		// why "0"+ ?
 		sb.append(m < 10 ? "0" + m : m);
 		sb.append(":");
 		long s = (milliSecs % (60 * 1000)) / 1000;
