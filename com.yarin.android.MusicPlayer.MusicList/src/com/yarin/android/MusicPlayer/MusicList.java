@@ -69,7 +69,9 @@ public class MusicList extends ListActivity {
 		Intent intent = new Intent(this, MusicPlayerService.class);
 		bindService(intent,
 				mPlaybackConnection, Context.BIND_AUTO_CREATE);
-		startService(intent);
+        // Tom Xue: either bindService() or startService()
+        // can start the Service
+//		startService(intent);
 
 		mTextView = (TextView) findViewById(R.id.show_text);
 		mPlayPauseButton = (Button) findViewById(R.id.play_pause_btn);
